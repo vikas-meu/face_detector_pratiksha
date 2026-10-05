@@ -1,0 +1,7 @@
+venv/
+output/
+__pycache__/
+# Downloaded automatically by face_detector.py
+models/
+# Your registered face - personal data, keep it off GitHub
+master/
