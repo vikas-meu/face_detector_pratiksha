@@ -1,6 +1,6 @@
 @echo off
-REM Starts the webcam face detector. Extra arguments are passed through,
-REM e.g.  run_windows.bat --image photo.jpg
+REM Opens the app menu. Extra arguments are passed through,
+REM e.g.  run_windows.bat 3   starts Robot Mimic straight away.
 cd /d "%~dp0"
 
 if not exist venv\Scripts\activate.bat (
@@ -10,5 +10,5 @@ if not exist venv\Scripts\activate.bat (
 )
 
 call venv\Scripts\activate.bat
-python face_detector.py %*
+python main.py %*
 pause

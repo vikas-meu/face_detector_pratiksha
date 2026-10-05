@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# One-step setup for macOS / Linux: creates a virtual environment and installs OpenCV.
+# One-step setup for macOS / Linux: creates a virtual environment, installs the packages and downloads the models.
 set -e
 cd "$(dirname "$0")"
 
@@ -17,8 +17,8 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 
 echo "Downloading face models..."
-python face_detector.py --download-models
+python main.py --download-models
 
 echo
-echo "Setup complete! Start the detector with:"
-echo "  source venv/bin/activate && python face_detector.py"
+echo "Setup complete! Open the app menu with:"
+echo "  source venv/bin/activate && python main.py"

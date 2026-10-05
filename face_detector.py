@@ -22,7 +22,6 @@ import argparse
 import os
 import sys
 import time
-import urllib.request
 
 try:
     import cv2
@@ -31,6 +30,8 @@ except ImportError:
     print("OpenCV is not installed. Run:  pip install -r requirements.txt")
     sys.exit(1)
 
+from common import BASE_DIR, OUTPUT_DIR, download_model, open_camera, save_image, window_closed
+
 # Hide OpenCV's harmless internal warnings so the console stays readable
 try:
     cv2.utils.logging.setLogLevel(cv2.utils.logging.LOG_LEVEL_ERROR)
@@ -38,10 +39,7 @@ except AttributeError:
     pass
 
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODELS_DIR = os.path.join(BASE_DIR, "models")
 MASTER_DIR = os.path.join(BASE_DIR, "master")
-OUTPUT_DIR = os.path.join(BASE_DIR, "output")
 MASTER_IMAGE = os.path.join(MASTER_DIR, "master_face.jpg")
 MASTER_FEATURES = os.path.join(MASTER_DIR, "master_features.npy")
 
@@ -70,27 +68,7 @@ BLACK = (0, 0, 0)
 
 def download_models():
     """Download the model files once and return their local paths."""
-    os.makedirs(MODELS_DIR, exist_ok=True)
-    paths = {}
-    for key, (filename, url) in MODELS.items():
-        path = os.path.join(MODELS_DIR, filename)
-        if not os.path.exists(path):
-            print(f"Downloading {filename} (one time only)...")
-            tmp_path = path + ".part"
-            try:
-                urllib.request.urlretrieve(url, tmp_path)
-            except Exception as exc:
-                print(f"Download failed: {exc}")
-                print(f"Download it manually from:\n  {url}\nand put it in the folder:\n  {MODELS_DIR}")
-                sys.exit(1)
-            if os.path.getsize(tmp_path) < 100_000:
-                os.remove(tmp_path)
-                print(f"The download of {filename} looks broken. Please try again,")
-                print(f"or download it manually from:\n  {url}")
-                sys.exit(1)
-            os.replace(tmp_path, path)
-        paths[key] = path
-    return paths
+    return {key: download_model(filename, url) for key, (filename, url) in MODELS.items()}
 
 
 def normalize(vector):
@@ -239,30 +217,10 @@ def run_image(path, engine, master):
     cv2.destroyAllWindows()
 
 
-def open_camera(index):
-    # On Windows the DirectShow backend opens webcams much faster
-    if sys.platform.startswith("win"):
-        cap = cv2.VideoCapture(index, cv2.CAP_DSHOW)
-        if cap.isOpened():
-            return cap
-    return cv2.VideoCapture(index)
-
-
-def save_snapshot(frame):
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-    path = os.path.join(OUTPUT_DIR, f"snapshot_{time.strftime('%Y%m%d_%H%M%S')}.jpg")
-    cv2.imwrite(path, frame)
-    print(f"Saved {path}")
-
-
 def run_stream(source, engine, master, is_camera, force_register=False):
     cap = open_camera(source) if is_camera else cv2.VideoCapture(source)
     if not cap.isOpened():
-        if is_camera:
-            print(f"Could not open webcam #{source}. Is it connected and not used by another app?")
-            print("Try a different camera with:  python face_detector.py --camera 1")
-        else:
-            print(f"Could not open video: {source}")
+        print(f"Could not open video: {source}")
         sys.exit(1)
 
     if not is_camera and master is None:
@@ -344,13 +302,11 @@ def run_stream(source, engine, master, is_camera, force_register=False):
         if key in (ord("q"), 27):
             break
         if key == ord("s"):
-            save_snapshot(frame)
+            save_image(frame, "snapshot")
         if key == ord("r") and is_camera:
             registering = True
             reg_start, reg_samples, reg_frames, best_crop = time.time(), [], 0, (0.0, None)
-
-        # Quit if the user closed the window with the X button
-        if cv2.getWindowProperty(window, cv2.WND_PROP_VISIBLE) < 1:
+        if window_closed(window):
             break
 
     cap.release()

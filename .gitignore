@@ -1,7 +1,8 @@
 venv/
 output/
 __pycache__/
-# Downloaded automatically by face_detector.py
+# Downloaded automatically by the apps
 models/
 # Your registered face - personal data, keep it off GitHub
 master/
+*.part

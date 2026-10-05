@@ -1,5 +1,5 @@
 @echo off
-REM One-click setup for Windows: creates a virtual environment and installs OpenCV.
+REM One-click setup for Windows: creates a virtual environment, installs the packages and downloads the models.
 cd /d "%~dp0"
 
 where python >nul 2>nul
@@ -30,7 +30,7 @@ if errorlevel 1 (
 
 echo.
 echo Downloading face models...
-python face_detector.py --download-models
+python main.py --download-models
 if errorlevel 1 (
     echo Model download failed. Check your internet connection and run setup again.
     pause
@@ -38,5 +38,5 @@ if errorlevel 1 (
 )
 
 echo.
-echo Setup complete! Double-click run_windows.bat to start the face detector.
+echo Setup complete! Double-click run_windows.bat to open the app menu.
 pause
